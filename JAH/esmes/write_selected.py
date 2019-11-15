@@ -52,9 +52,12 @@ def read_and_select_events(infiles, event_list):
                            mc=mc_info, run_number=run_number,
                            event_number=event_number, timestamp=timestamp)
 
-def loop_over_files_and_write(file_out, event_nums_file, folder_in, data = True, **kwargs):
+def loop_over_files_and_write(file_out, event_nums_file, folder_in, size = -1, data = True, **kwargs):
     event_list = np.load(event_nums_file)
-    filesin    = glob(folder_in +'/*.h5')[:100]
+    print('# selected events ', len(event_list) )
+    filesin    = glob(folder_in +'/*.h5')[:size]
+    print('input files       ', filesin[0], filesin[-1])
+    print('output file       ', file_out)
     with tb.open_file(file_out, 'w') as h5out:
         write_run_and_event = run_and_event_writer(h5out)
         write_mc_           = mc_info_writer(h5out) if (not data) else (lambda *_: None)
@@ -67,6 +70,7 @@ def loop_over_files_and_write(file_out, event_nums_file, folder_in, data = True,
         try:
             while True:
                 selected = next(events_generator)
+                #print('event ', selected['event_number'])
                 write_run_and_event(selected['run_number'], selected['event_number'], selected['timestamp'])
                 write_mc_(selected['mc'], selected['event_number'])
                 write_hits_reco(selected['hits'])
